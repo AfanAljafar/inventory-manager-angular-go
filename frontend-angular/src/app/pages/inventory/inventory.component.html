@@ -1,0 +1,277 @@
+<section class="p-2 pt-4">
+  <h2 class="text-xl font-bold text-gray-800 mb-4">Inventory Items</h2>
+  <div class="top-table flex flex-row gap-4 items-center">
+    <button
+      class="bg-slate-400 font-bold px-3 py-1 rounded-md mb-2 hover:bg-blue-700 transition-colors"
+      (click)="openAddItemModal()"
+    >
+      (+) add item
+    </button>
+    <div class="filter-category mb-2">
+      <label>Filter by Category:&nbsp;</label>
+      <select [(ngModel)]="selectedCategory" (change)="filterItems()">
+        <option value="">All</option>
+        <option value="tools">tools</option>
+        <option value="materials">materials</option>
+      </select>
+    </div>
+    <div class="search-item mb-2">
+      <label>Search Item Name: &nbsp;</label>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="filterItems()"
+        placeholder="Search by name..."
+      />
+    </div>
+    <button
+      class="btn-csv bg-slate-400 px-3 py-1 rounded-md mb-2 hover:bg-blue-700 transition-colors ml-auto"
+      (click)="exportToCSV()"
+    >
+      Export CSV
+    </button>
+  </div>
+
+  <div
+    class="h-[455px] overflow-x-hidden overflow-y-auto rounded-lg shadow-md border border-gray-200"
+  >
+    <table
+      class="min-w-full divide-y divide-gray-200 text-sm text-left text-gray-700"
+    >
+      <thead
+        class="bg-gray-50 text-xs uppercase font-medium text-gray-500 h-12 sticky top-0 z-10"
+      >
+        <tr>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            #
+          </th>
+
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Name
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Category
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Picture
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Qty
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Unit
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Price
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            In By
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Out By
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Time In
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Time Out
+          </th>
+          <th
+            class="px-4 py-3 truncate whitespace-nowrap overflow-hidden max-h-[48px]"
+          >
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 bg-white">
+        <tr *ngFor="let item of paginatedItems" class="hover:bg-gray-50">
+          <td class="px-4 py-2">{{ item.id }}</td>
+          <td class="px-4 py-2 font-medium">{{ item.item_name }}</td>
+          <td class="px-4 py-2 capitalize">{{ item.category_item }}</td>
+          <td class="px-4 py-2">
+            <!-- <img
+              *ngIf="item.item_picture"
+              [src]="item.item_picture"
+              alt="item"
+              class="w-14 h-14 rounded-md object-cover ring-1 ring-gray-200"
+            /> -->
+            <img
+              [src]="
+                item.item_picture && item.item_picture.startsWith('http')
+                  ? item.item_picture
+                  : 'assets/no-image.png'
+              "
+              alt="item"
+              class="w-14 h-14 rounded-md object-cover ring-1 ring-gray-200"
+            />
+          </td>
+          <td class="px-4 py-2">{{ item.quantity }}</td>
+          <td class="px-4 py-2">{{ item.unit }}</td>
+          <td class="px-4 py-2 text-green-700">
+            {{ item.price | currency : "IDR" }}
+          </td>
+          <td class="px-4 py-2">{{ item.goods_in_by }}</td>
+          <td class="px-4 py-2">{{ item.goods_out_by }}</td>
+          <td class="px-4 py-2">{{ item.time_goods_in | date : "short" }}</td>
+          <td class="px-4 py-2">{{ item.time_goods_out | date : "short" }}</td>
+          <td
+            class="px-2 py-1 flex flex-col gap-1 justify-center items-center justify-items-center"
+          >
+            <button
+              (click)="openEditItemModal(item, item.id)"
+              class="bg-slate-400 w-[60px] py-0.5 rounded"
+            >
+              Update</button
+            ><button
+              (click)="deleteItem(item.id)"
+              class="bg-red-500 w-[60px] py-0.5 rounded"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <div class="pagination mt-3">
+      <button (click)="prevPage()" [disabled]="currentPage === 1">Prev</button>
+      &nbsp; <span>Page {{ currentPage }} of {{ totalPages }}</span> &nbsp;
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Add Item -->
+  <div
+    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    *ngIf="isAddItemModalOpen"
+  >
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <h2 class="text-xl font-semibold mb-4">Add New Item</h2>
+
+      <form (ngSubmit)="addItem()" class="space-y-4">
+        <div>
+          <label class="block font-medium">Category</label>
+          <select
+            [(ngModel)]="newItem.category_item"
+            name="category_item"
+            class="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          >
+            <option value="" disabled selected>Select category</option>
+            <option value="tools">Tools</option>
+            <option value="materials">Materials</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium">Name</label>
+          <input
+            type="text"
+            [(ngModel)]="newItem.item_name"
+            name="item_name"
+            class="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block font-medium">Picture URL</label>
+          <input
+            type="text"
+            [(ngModel)]="newItem.item_picture"
+            name="item_picture"
+            class="w-full border border-gray-300 rounded px-3 py-2"
+          />
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-1">
+            <label class="block font-medium">Quantity</label>
+            <input
+              type="number"
+              [(ngModel)]="newItem.quantity"
+              name="quantity"
+              class="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            />
+          </div>
+
+          <div class="flex-1">
+            <label class="block font-medium">Unit</label>
+            <input
+              type="text"
+              [(ngModel)]="newItem.unit"
+              name="unit"
+              class="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium">Price</label>
+          <input
+            type="number"
+            [(ngModel)]="newItem.price"
+            name="price"
+            class="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          />
+        </div>
+
+        <!-- <div>
+          <label class="block font-medium">Goods In By (User ID)</label>
+          <input
+            type="number"
+            [(ngModel)]="newItem.goods_in_by"
+            name="goods_in_by"
+            class="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          />
+        </div> -->
+
+        <div class="flex justify-end gap-2 mt-4">
+          <button
+            type="button"
+            (click)="closeAddItemModal()"
+            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
